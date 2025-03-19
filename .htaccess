@@ -1,0 +1,63 @@
+# Archivo .htaccess principal
+# Configuraciones para Apache y manejo de URLs amigables
+
+# Activar el motor de reescritura
+RewriteEngine On
+
+# Si la URL solicita un archivo o directorio real, no hacer nada
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Para URLs amigables, redirigir todo a index.php
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+# Manejo de errores y redirecciones
+ErrorDocument 404 /index.php?option=error&code=404
+ErrorDocument 403 /index.php?option=error&code=403
+ErrorDocument 500 /index.php?option=error&code=500
+
+# Prohibir acceso a archivos sensibles
+<FilesMatch "(\.env|\.htaccess|composer.json|composer.lock|\.(md|log))$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Proteger directorios sensibles
+<FilesMatch "^(config|logs|vendor)/.*">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Permitir acceso al directorio de assets
+<FilesMatch "^assets/(css|js|img)/.*">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Ajustes de seguridad
+<IfModule mod_headers.c>
+    # Deshabilitar la exposición de información del servidor
+    Header unset Server
+    Header unset X-Powered-By
+    
+    # Protección contra XSS
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Protección contra MIME-sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Evitar clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# Compresión GZIP para mejorar el rendimiento
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript text/javascript application/json
+</IfModule>
+
+# Configuración de PHP
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log logs/php_errors.log
+</IfModule> 
