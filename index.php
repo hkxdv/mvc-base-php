@@ -12,7 +12,7 @@
 require_once "config/bootstrap.config.php";
 
 // Verificar si es un error HTTP redirigido
-manejar_errores_http();
+manejarErroresHttp();
 
 // Iniciar la aplicación web normal
-iniciar_aplicacion();
+iniciarAplicacion();

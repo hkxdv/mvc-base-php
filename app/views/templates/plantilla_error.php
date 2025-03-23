@@ -2,7 +2,7 @@
 <html lang="es">
 
 <head>
-    <?php include alias('@Meta_datos_error'); ?>
+    <?php include 'app/Views/components/meta_datos_error.php'; ?>
 </head>
 
 <body class="min-h-screen text-white transition-colors duration-300" style="background: radial-gradient(circle at center, var(--bg-secondary), var(--bg-primary));">
@@ -13,4 +13,4 @@
     </main>
 </body>
 
-</html> 
+</html>

@@ -5,7 +5,7 @@
  * Configuración de manejadores globales de errores y excepciones
  * 
  * Este archivo configura manejadores personalizados para capturar
- * errores de PHP y mostrarlos con nuestra plantilla personalizada.
+ * errores de PHP y mostrarlos con plantilla personalizada.
  */
 
 /**
@@ -17,7 +17,7 @@
  * @param int $line Línea donde ocurrió el error
  * @return bool Indica si el error fue manejado
  */
-function error_handler_global($level, $message, $file, $line)
+function errorHandlerGlobal(int $level, string $message, string $file, int $line): bool
 {
     // Para errores críticos, convertirlos en excepciones
     if (in_array($level, [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE, E_RECOVERABLE_ERROR, E_USER_ERROR])) {
@@ -40,11 +40,16 @@ function error_handler_global($level, $message, $file, $line)
  * 
  * @param Throwable $e La excepción no capturada
  */
-function exception_handler_global($e)
+function exceptionHandlerGlobal(\Throwable $e): void
 {
-    // Verificar si ErrorControlador ya está cargado
-    if (!class_exists('ErrorControlador')) {
-        require_once __DIR__ . "/../app/controllers/Error.controlador.php";
+    // Verificar si ErrorController ya está cargado
+    if (!class_exists('\\App\\Controllers\\ErrorController')) {
+        // Si no está cargado, intentar cargarlo a través del autoloader
+        if (!file_exists(__DIR__ . "/../app/Controllers/ErrorController.php")) {
+            // Si no podemos cargar el controlador, mostrar un error básico
+            http_response_code(500);
+            die("Error crítico: No se pudo cargar el controlador de errores.");
+        }
     }
 
     $mensaje = $e->getMessage();
@@ -53,19 +58,29 @@ function exception_handler_global($e)
     $detalles = "File: " . $e->getFile() . " on line " . $e->getLine() .
         "\nTrace: " . $e->getTraceAsString();
 
-    // Usar nuestro sistema de errores personalizado
-    ErrorControlador::error_generico($codigo, $titulo, $mensaje, $detalles);
+    try {
+        // Usar nuestro sistema de errores personalizado
+        \App\Controllers\ErrorController::errorGenerico($codigo, $titulo, $mensaje, $detalles);
+    } catch (\Throwable $e) {
+        // Si falla el controlador de errores, mostrar un error básico
+        http_response_code(500);
+        if ($_ENV['APP_DEBUG'] === 'true') {
+            die("Error crítico: " . $e->getMessage() . "\nEn archivo: " . $e->getFile() . " línea: " . $e->getLine());
+        } else {
+            die("Error interno del servidor. Por favor, intente más tarde.");
+        }
+    }
 }
 
 // Registrar los manejadores
-set_error_handler('error_handler_global');
-set_exception_handler('exception_handler_global');
+set_error_handler('errorHandlerGlobal');
+set_exception_handler('exceptionHandlerGlobal');
 
 // Configurar el reporte de errores según el entorno
 if (isset($_ENV['APP_DEBUG']) && $_ENV['APP_DEBUG'] === 'true') {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 } else {
-    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
     ini_set('display_errors', 0);
 }
