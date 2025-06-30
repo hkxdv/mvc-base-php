@@ -25,8 +25,6 @@ use App\Controllers\PrincipalController;
     <!-- Pie de página -->
     <?php include 'app/Views/components/pie_pagina.php'; ?>
 
-    <!-- Script principal con módulos ES6 -->
-    <script type="module" src="assets/js/modules/app.js"></script>
 </body>
 
 </html>
